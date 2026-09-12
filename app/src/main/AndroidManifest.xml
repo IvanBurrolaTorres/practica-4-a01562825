@@ -4,13 +4,13 @@
 
     <application
         android:allowBackup="true"
-        android:label="Sabores"
+        android:label="Sabores en red"
+        android:icon="@drawable/ic_sabores"
         android:supportsRtl="true"
         android:theme="@style/Theme.Sabores">
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:label="Sabores">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

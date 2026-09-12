@@ -1,48 +1,34 @@
 package mx.tec.sabores.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import mx.tec.sabores.ui.components.StarsRow
+import mx.tec.sabores.domain.Review
+import mx.tec.sabores.ui.components.ReviewCard
 import mx.tec.sabores.ui.state.MyReviewItem
 
 @Composable
-fun MyReviewsScreen(items: List<MyReviewItem>, modifier: Modifier = Modifier) {
+fun MyReviewsScreen(items: List<MyReviewItem>, alumno: String, busyReviewId: Int?,
+    onEdit: (Review) -> Unit, onDelete: (Review) -> Unit, modifier: Modifier = Modifier) {
     if (items.isEmpty()) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Todavía no has reseñado ningún lugar.",
-                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Box(modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+            Text("Todavía no has reseñado ningún lugar.")
         }
         return
     }
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(items) { item ->
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Text(item.restaurantName, style = MaterialTheme.typography.titleMedium)
-                    StarsRow(item.review.stars)
-                    Spacer(Modifier.height(6.dp))
-                    Text(item.review.comment, style = MaterialTheme.typography.bodyMedium)
-                }
+    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        items(items, key = { it.review.id }) { item ->
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(item.restaurantName, style = MaterialTheme.typography.titleMedium)
+                ReviewCard(item.review, item.review.author.equals(alumno, ignoreCase = true),
+                    busy = busyReviewId != null,
+                    onEdit = { onEdit(item.review) }, onDelete = { onDelete(item.review) })
             }
         }
     }

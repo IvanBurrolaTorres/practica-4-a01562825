@@ -45,7 +45,7 @@ fun NewReviewScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Reseñar ${restaurant.name}") },
+                title = { Text(if (uiState.isEditing) "Editar reseña" else "Reseñar ${restaurant.name}") },
                 navigationIcon = {
                     IconButton(onClick = onCancel, enabled = !uiState.guardando) {
                         Icon(Icons.Default.Close, contentDescription = "Cancelar")
@@ -83,7 +83,7 @@ fun NewReviewScreen(
                 onClick = onSave,
                 enabled = uiState.canSave,
                 modifier = Modifier.fillMaxWidth()
-            ) { Text(if (uiState.guardando) "Publicando…" else "Publicar reseña") }
+            ) { Text(if (uiState.guardando) "Guardando…" else if (uiState.isEditing) "Guardar cambios" else "Publicar reseña") }
         }
     }
 }

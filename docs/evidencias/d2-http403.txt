@@ -1,0 +1,2 @@
+09-11 19:57:18.570  6934  7194 I okhttp.OkHttpClient: --> DELETE https://startdroid.com/api/reviews/2
+09-11 19:57:18.653  6934  7194 I okhttp.OkHttpClient: <-- 403 https://startdroid.com/api/reviews/2 (83ms, unknown-length body)

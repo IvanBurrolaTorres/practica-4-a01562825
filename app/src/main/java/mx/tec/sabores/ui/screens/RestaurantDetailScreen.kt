@@ -29,7 +29,7 @@ import mx.tec.sabores.domain.RatingSummary
 import mx.tec.sabores.domain.Restaurant
 import mx.tec.sabores.domain.Review
 import mx.tec.sabores.ui.components.RatingLabel
-import mx.tec.sabores.ui.components.StarsRow
+import mx.tec.sabores.ui.components.ReviewCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +39,10 @@ fun RestaurantDetailScreen(
     reviews: List<Review>,
     onWriteReviewClick: () -> Unit,
     onBack: () -> Unit,
+    alumno: String,
+    busyReviewId: Int?,
+    onEdit: (Review) -> Unit,
+    onDelete: (Review) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -92,14 +96,10 @@ fun RestaurantDetailScreen(
                     )
                 }
             } else {
-                items(reviews) { review ->
-                    Card(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(14.dp)) {
-                            StarsRow(review.stars)
-                            Spacer(Modifier.height(6.dp))
-                            Text(review.comment, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
+                items(reviews, key = { it.id }) { review ->
+                    ReviewCard(review, review.author.equals(alumno, ignoreCase = true),
+                        busy = busyReviewId != null,
+                        onEdit = { onEdit(review) }, onDelete = { onDelete(review) })
                 }
             }
 
