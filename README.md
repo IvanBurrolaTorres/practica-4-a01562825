@@ -27,7 +27,7 @@ La matrícula ya está configurada como `a01562825` en `data/remote/Network.kt`.
 
 ## Entregables
 - [Bitácora](docs/bitacora.md): ejercicios 0, A2, B1 y C2.
-- [Video de 60 segundos, sin audio](entregables/Laboratorio_4_Sabores_en_red_Sin_Audio.mp4).
+- [Video de 60 segundos](entregables/Laboratorio_4_Sabores_en_red.mp4).
 - [Verificación](docs/verificacion.md) y [evidencias](docs/evidencias).
 - Seis commits de checkpoint en main, además del commit original del profesor.
 

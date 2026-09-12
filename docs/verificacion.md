@@ -23,7 +23,7 @@ Resultado: BUILD SUCCESSFUL; lint: No issues found. Se verificó también que ni
 La reseña del video se identifica como demostración del laboratorio. El promedio de Brasa 33 pasó de 3.9 (7 reseñas) a 4.0 (8 reseñas) durante esa grabación. La API es compartida, por lo que estas cifras son una observación de ese momento.
 
 ## Video
-`entregables/Laboratorio_4_Sabores_en_red_Sin_Audio.mp4`: 60 segundos, sin pista de audio. Muestra lista real, creación de #96, modo avión con error, reintento y rechazo 403 desde la app. La grabación se aceleró uniformemente aproximadamente 1.22× para ajustar su duración, conservando todos los eventos, y se prolongó el fotograma final para llegar a 60 segundos. No se simularon respuestas del servidor.
+`entregables/Laboratorio_4_Sabores_en_red.mp4`: 60 segundos. Muestra lista real, creación de #96, modo avión con error, reintento y rechazo 403 desde la app. La grabación se aceleró uniformemente aproximadamente 1.22× para ajustar su duración, conservando todos los eventos, y se prolongó el fotograma final para llegar a 60 segundos. No se simularon respuestas del servidor.
 
 ## Evidencias y alcance
 Los XML, capturas, respuestas JSON y logs en docs/evidencias documentan estas observaciones. Las ramas de experimentos contienen el comportamiento que se cambió a propósito; main conserva la validación y el manejo de errores.
