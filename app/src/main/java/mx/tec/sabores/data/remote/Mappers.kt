@@ -1,5 +1,6 @@
 package mx.tec.sabores.data.remote
 
+import mx.tec.sabores.domain.RatingSummary
 import mx.tec.sabores.domain.Restaurant
 import mx.tec.sabores.domain.Review
 
@@ -7,3 +8,5 @@ fun RestaurantDto.toDomain() = Restaurant(id, name, cuisine, address, descriptio
 fun ReviewDto.toDomain() = Review(
     id = id, restaurantId = restaurantId, author = author, stars = stars, comment = comment
 )
+
+fun RestaurantDto.toSummary() = RatingSummary(ratingAverage, ratingCount)

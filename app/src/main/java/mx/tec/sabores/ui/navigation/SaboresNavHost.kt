@@ -6,6 +6,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -62,14 +63,14 @@ fun SaboresApp() {
 
             composable(Route.HOME) {
                 RestaurantListScreen(
-                    restaurants = viewModel.restaurants,
-                    summaryOf = { id -> viewModel.summaryOf(id) },
+                    restaurants = viewModel.restaurantes,
                     onRestaurantClick = { id -> nav.navigate(Route.detail(id)) }
                 )
             }
 
             composable(Route.MY_REVIEWS) {
-                MyReviewsScreen(items = viewModel.myReviews)
+                LaunchedEffect(Unit) { viewModel.cargarMisResenas() }
+                MyReviewsScreen(items = viewModel.mias)
             }
 
             composable(
@@ -77,12 +78,13 @@ fun SaboresApp() {
                 arguments = listOf(navArgument(Route.ARG_RESTAURANT_ID) { type = NavType.IntType })
             ) { entry ->
                 val id = entry.arguments?.getInt(Route.ARG_RESTAURANT_ID) ?: return@composable
-                 val restaurant = viewModel.restaurantById(id) ?: return@composable
+                LaunchedEffect(id) { viewModel.cargarDetalle(id) }
+                val detail = viewModel.detalle?.takeIf { it.restaurant.id == id } ?: return@composable
 
                 RestaurantDetailScreen(
-                    restaurant = restaurant,
-                    summary = viewModel.summaryOf(id),
-                    reviews = viewModel.reviewsOf(id),
+                    restaurant = detail.restaurant,
+                    summary = detail.summary,
+                    reviews = detail.reviews,
                     onWriteReviewClick = { nav.navigate(Route.newReview(id)) },
                     onBack = { nav.popBackStack() }
                 )
@@ -93,7 +95,7 @@ fun SaboresApp() {
                 arguments = listOf(navArgument(Route.ARG_RESTAURANT_ID) { type = NavType.IntType })
             ) { entry ->
                 val id = entry.arguments?.getInt(Route.ARG_RESTAURANT_ID) ?: return@composable
-                val restaurant = viewModel.restaurantById(id) ?: return@composable
+                val restaurant = viewModel.detalle?.restaurant ?: return@composable
 
                 val formViewModel: NewReviewViewModel = viewModel()
 
@@ -103,11 +105,7 @@ fun SaboresApp() {
                     onStarsChange = formViewModel::onStarsChange,
                     onCommentChange = formViewModel::onCommentChange,
                     onSave = {
-                        viewModel.addReview(
-                            restaurantId = id,
-                            stars = formViewModel.uiState.stars,
-                            comment = formViewModel.uiState.comment
-                        )
+                        // POST se integra en el checkpoint C3.
                         nav.popBackStack()
                     },
                     onCancel = { nav.popBackStack() }
