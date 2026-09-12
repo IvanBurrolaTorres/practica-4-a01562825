@@ -1,116 +1,94 @@
 package mx.tec.sabores.ui.navigation
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import mx.tec.sabores.ui.screens.MyReviewsScreen
-import mx.tec.sabores.ui.screens.NewReviewScreen
-import mx.tec.sabores.ui.screens.RestaurantDetailScreen
-import mx.tec.sabores.ui.screens.RestaurantListScreen
-import mx.tec.sabores.ui.state.NewReviewViewModel
-import mx.tec.sabores.ui.state.SaboresViewModel
+import mx.tec.sabores.ui.components.*
+import mx.tec.sabores.ui.screens.*
+import mx.tec.sabores.ui.state.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaboresApp() {
     val nav = rememberNavController()
-    val viewModel: SaboresViewModel = viewModel()
-
-    val backStackEntry by nav.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route
-    val showBottomBar = MenuItem.entries.any { it.route == currentRoute }
-
+    val model: SaboresViewModel = viewModel()
+    val entry by nav.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    val root = MenuItem.entries.any { it.route == route }
     Scaffold(
+        topBar = {
+            if (root) TopAppBar(
+                title = { Text(if (route == Route.MY_REVIEWS) "Mis reseñas" else "Sabores en red") },
+                actions = {
+                    IconButton(onClick = {
+                        if (route == Route.MY_REVIEWS) model.cargarMisResenas() else model.cargarRestaurantes()
+                    }) { Icon(Icons.Default.Refresh, contentDescription = "Actualizar") }
+                }
+            )
+        },
         bottomBar = {
-            if (showBottomBar) {
-                NavigationBar {
-                    MenuItem.entries.forEach { item ->
-                        NavigationBarItem(
-                            selected = currentRoute == item.route,
-                            onClick = {
-                                nav.navigate(item.route) {
-                                    popUpTo(Route.HOME) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(item.icon, contentDescription = null) },
-                            label = { Text(item.label) }
-                        )
-                    }
+            if (root) NavigationBar {
+                MenuItem.entries.forEach { item ->
+                    NavigationBarItem(selected = route == item.route,
+                        onClick = { nav.navigate(item.route) {
+                            popUpTo(Route.HOME) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        } },
+                        icon = { Icon(item.icon, contentDescription = null) },
+                        label = { Text(item.label) })
                 }
             }
         }
     ) { padding ->
-        NavHost(
-            navController = nav,
-            startDestination = Route.HOME,
-            modifier = Modifier.padding(padding)
-        ) {
-
+        NavHost(nav, startDestination = Route.HOME, modifier = Modifier.padding(padding)) {
             composable(Route.HOME) {
-                RestaurantListScreen(
-                    restaurants = viewModel.restaurantes,
-                    onRestaurantClick = { id -> nav.navigate(Route.detail(id)) }
-                )
+                LaunchedEffect(Unit) { model.cargarRestaurantes() }
+                EstadoView(model.restaurantes, model::cargarRestaurantes) { data ->
+                    RestaurantListScreen(data, { nav.navigate(Route.detail(it)) })
+                }
             }
-
             composable(Route.MY_REVIEWS) {
-                LaunchedEffect(Unit) { viewModel.cargarMisResenas() }
-                MyReviewsScreen(items = viewModel.mias)
+                LaunchedEffect(Unit) { model.cargarMisResenas() }
+                EstadoView(model.mias, model::cargarMisResenas) { data -> MyReviewsScreen(data) }
             }
-
-            composable(
-                route = Route.DETAIL,
-                arguments = listOf(navArgument(Route.ARG_RESTAURANT_ID) { type = NavType.IntType })
-            ) { entry ->
-                val id = entry.arguments?.getInt(Route.ARG_RESTAURANT_ID) ?: return@composable
-                LaunchedEffect(id) { viewModel.cargarDetalle(id) }
-                val detail = viewModel.detalle?.takeIf { it.restaurant.id == id } ?: return@composable
-
-                RestaurantDetailScreen(
-                    restaurant = detail.restaurant,
-                    summary = detail.summary,
-                    reviews = detail.reviews,
-                    onWriteReviewClick = { nav.navigate(Route.newReview(id)) },
-                    onBack = { nav.popBackStack() }
-                )
+            composable(Route.DETAIL,
+                arguments = listOf(navArgument(Route.ARG_RESTAURANT_ID) { type = NavType.IntType })) { destination ->
+                val id = destination.arguments?.getInt(Route.ARG_RESTAURANT_ID) ?: return@composable
+                LaunchedEffect(id) { model.cargarDetalle(id) }
+                EstadoView(model.detalle, { model.cargarDetalle(id) }, { nav.popBackStack() }) { detail ->
+                    RestaurantDetailScreen(detail.restaurant, detail.summary, detail.reviews,
+                        onWriteReviewClick = { nav.navigate(Route.newReview(id)) },
+                        onBack = { nav.popBackStack() })
+                }
             }
-
-            composable(
-                route = Route.NEW_REVIEW,
-                arguments = listOf(navArgument(Route.ARG_RESTAURANT_ID) { type = NavType.IntType })
-            ) { entry ->
-                val id = entry.arguments?.getInt(Route.ARG_RESTAURANT_ID) ?: return@composable
-                val restaurant = viewModel.detalle?.restaurant ?: return@composable
-
-                val formViewModel: NewReviewViewModel = viewModel()
-
-                NewReviewScreen(
-                    restaurant = restaurant,
-                    uiState = formViewModel.uiState,
-                    onStarsChange = formViewModel::onStarsChange,
-                    onCommentChange = formViewModel::onCommentChange,
-                    onSave = {
-                        // POST se integra en el checkpoint C3.
-                        nav.popBackStack()
-                    },
-                    onCancel = { nav.popBackStack() }
-                )
+            composable(Route.NEW_REVIEW,
+                arguments = listOf(navArgument(Route.ARG_RESTAURANT_ID) { type = NavType.IntType })) { destination ->
+                val id = destination.arguments?.getInt(Route.ARG_RESTAURANT_ID) ?: return@composable
+                LaunchedEffect(id) { model.cargarDetalle(id) }
+                val form: NewReviewViewModel = viewModel()
+                EstadoView(model.detalle, { model.cargarDetalle(id) }, { nav.popBackStack() }) { detail ->
+                    NewReviewScreen(detail.restaurant, form.uiState, form::onStarsChange, form::onCommentChange,
+                        onSave = { nav.popBackStack() }, onCancel = { nav.popBackStack() })
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun <T> EstadoView(state: UiState<T>, retry: () -> Unit, back: (() -> Unit)? = null,
+    content: @Composable (T) -> Unit) {
+    when (state) {
+        UiState.Cargando -> CargandoView()
+        is UiState.Error -> ErrorView(state.mensaje, retry, back)
+        is UiState.Exito -> content(state.datos)
     }
 }

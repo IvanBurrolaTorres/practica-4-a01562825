@@ -1,5 +1,6 @@
 package mx.tec.sabores.ui.screens
 
+import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ fun RestaurantListScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        if (restaurants.isEmpty()) item { Text("No hay restaurantes disponibles.") }
         items(restaurants, key = { it.restaurant.id }) { item ->
             RestaurantCard(
                 restaurant = item.restaurant,

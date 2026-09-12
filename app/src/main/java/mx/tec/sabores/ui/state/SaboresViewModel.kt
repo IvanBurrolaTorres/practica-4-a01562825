@@ -3,7 +3,7 @@ package mx.tec.sabores.ui.state
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import mx.tec.sabores.data.RestaurantRepository
 import mx.tec.sabores.domain.*
 
@@ -13,21 +13,48 @@ data class Detalle(val restaurant: Restaurant, val reviews: List<Review>) {
 }
 
 class SaboresViewModel(private val repository: RestaurantRepository = RestaurantRepository()) : ViewModel() {
-    var restaurantes by mutableStateOf<List<RestaurantEnLista>>(emptyList())
+    var restaurantes by mutableStateOf<UiState<List<RestaurantEnLista>>>(UiState.Cargando)
         private set
-    var detalle by mutableStateOf<Detalle?>(null)
+    var detalle by mutableStateOf<UiState<Detalle>>(UiState.Cargando)
         private set
-    var mias by mutableStateOf<List<MyReviewItem>>(emptyList())
+    var mias by mutableStateOf<UiState<List<MyReviewItem>>>(UiState.Cargando)
         private set
-    init { cargarRestaurantes() }
-    fun cargarRestaurantes() { viewModelScope.launch { restaurantes = repository.getAllForList() } }
+    private var listJob: Job? = null
+    private var detailJob: Job? = null
+    private var mineJob: Job? = null
+
+    fun cargarRestaurantes() {
+        listJob?.cancel()
+        listJob = viewModelScope.launch {
+            restaurantes = UiState.Cargando
+            restaurantes = pedir { repository.getAllForList() }
+        }
+    }
     fun cargarDetalle(id: Int) {
-        viewModelScope.launch { detalle = Detalle(repository.getById(id), repository.getReviews(id)) }
+        detailJob?.cancel()
+        detailJob = viewModelScope.launch {
+            detalle = UiState.Cargando
+            detalle = pedir {
+                coroutineScope {
+                    val restaurant = async { repository.getById(id) }
+                    val reviews = async { repository.getReviews(id) }
+                    Detalle(restaurant.await(), reviews.await())
+                }
+            }
+        }
     }
     fun cargarMisResenas() {
-        viewModelScope.launch {
-            val names = repository.getAll().associate { it.id to it.name }
-            mias = repository.getMyReviews().map { MyReviewItem(names[it.restaurantId] ?: "Restaurante", it) }
+        mineJob?.cancel()
+        mineJob = viewModelScope.launch {
+            mias = UiState.Cargando
+            mias = pedir {
+                coroutineScope {
+                    val restaurants = async { repository.getAll() }
+                    val reviews = async { repository.getMyReviews() }
+                    val names = restaurants.await().associate { it.id to it.name }
+                    reviews.await().map { MyReviewItem(names[it.restaurantId] ?: "Restaurante", it) }
+                }
+            }
         }
     }
 }
