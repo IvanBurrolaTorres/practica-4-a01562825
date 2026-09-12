@@ -1,5 +1,9 @@
 package mx.tec.sabores.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,13 +40,14 @@ fun NewReviewScreen(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    BackHandler(enabled = uiState.guardando) { /* Esperar la confirmación evita salir con un envío en curso. */ }
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text("Reseñar ${restaurant.name}") },
                 navigationIcon = {
-                    IconButton(onClick = onCancel) {
+                    IconButton(onClick = onCancel, enabled = !uiState.guardando) {
                         Icon(Icons.Default.Close, contentDescription = "Cancelar")
                     }
                 }
@@ -50,7 +55,7 @@ fun NewReviewScreen(
         }
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text("¿Cómo estuvo?", style = MaterialTheme.typography.titleMedium)
@@ -58,6 +63,7 @@ fun NewReviewScreen(
 
             OutlinedTextField(
                 value = uiState.comment,
+                enabled = !uiState.guardando,
                 onValueChange = onCommentChange,
                 label = { Text("Tu reseña") },
                 minLines = 4,
@@ -70,11 +76,14 @@ fun NewReviewScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            uiState.errorAlGuardar?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+            }
             Button(
                 onClick = onSave,
                 enabled = uiState.canSave,
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Publicar reseña") }
+            ) { Text(if (uiState.guardando) "Publicando…" else "Publicar reseña") }
         }
     }
 }

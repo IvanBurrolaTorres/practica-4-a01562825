@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
@@ -50,19 +52,19 @@ fun SaboresApp() {
     ) { padding ->
         NavHost(nav, startDestination = Route.HOME, modifier = Modifier.padding(padding)) {
             composable(Route.HOME) {
-                LaunchedEffect(Unit) { model.cargarRestaurantes() }
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.cargarRestaurantes() }
                 EstadoView(model.restaurantes, model::cargarRestaurantes) { data ->
                     RestaurantListScreen(data, { nav.navigate(Route.detail(it)) })
                 }
             }
             composable(Route.MY_REVIEWS) {
-                LaunchedEffect(Unit) { model.cargarMisResenas() }
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.cargarMisResenas() }
                 EstadoView(model.mias, model::cargarMisResenas) { data -> MyReviewsScreen(data) }
             }
             composable(Route.DETAIL,
                 arguments = listOf(navArgument(Route.ARG_RESTAURANT_ID) { type = NavType.IntType })) { destination ->
                 val id = destination.arguments?.getInt(Route.ARG_RESTAURANT_ID) ?: return@composable
-                LaunchedEffect(id) { model.cargarDetalle(id) }
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.cargarDetalle(id) }
                 EstadoView(model.detalle, { model.cargarDetalle(id) }, { nav.popBackStack() }) { detail ->
                     RestaurantDetailScreen(detail.restaurant, detail.summary, detail.reviews,
                         onWriteReviewClick = { nav.navigate(Route.newReview(id)) },
@@ -72,11 +74,14 @@ fun SaboresApp() {
             composable(Route.NEW_REVIEW,
                 arguments = listOf(navArgument(Route.ARG_RESTAURANT_ID) { type = NavType.IntType })) { destination ->
                 val id = destination.arguments?.getInt(Route.ARG_RESTAURANT_ID) ?: return@composable
-                LaunchedEffect(id) { model.cargarDetalle(id) }
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.cargarDetalle(id) }
                 val form: NewReviewViewModel = viewModel()
+                LaunchedEffect(form.uiState.savedReviewId) {
+                    if (form.uiState.savedReviewId != null) nav.popBackStack()
+                }
                 EstadoView(model.detalle, { model.cargarDetalle(id) }, { nav.popBackStack() }) { detail ->
                     NewReviewScreen(detail.restaurant, form.uiState, form::onStarsChange, form::onCommentChange,
-                        onSave = { nav.popBackStack() }, onCancel = { nav.popBackStack() })
+                        onSave = { form.publicar(id) }, onCancel = { nav.popBackStack() })
                 }
             }
         }
