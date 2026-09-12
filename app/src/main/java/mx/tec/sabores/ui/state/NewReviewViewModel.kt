@@ -20,7 +20,7 @@ data class NewReviewUiState(
 ) {
     val commentError: ReviewError? =
         if (comment.isEmpty()) null else ReviewValidator.validateComment(comment)
-    val canSave = ReviewValidator.isValid(stars, comment) && !guardando && savedReviewId == null
+    val canSave = (stars in 1..5) && !guardando && savedReviewId == null
     val charactersLeft = ReviewValidator.COMMENT_MAX - comment.trim().length
 }
 
