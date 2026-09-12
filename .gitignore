@@ -1,4 +1,4 @@
-﻿*.iml
+*.iml
 .gradle/
 .idea/
 .kotlin/
@@ -8,3 +8,4 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+entregables/*.apk
